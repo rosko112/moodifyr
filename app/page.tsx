@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <main className="relative isolate overflow-hidden">
@@ -47,12 +49,12 @@ export default function Home() {
               >
                 Začni s Spotify povezavo
               </a>
-              <a
-                href="#how-it-works"
+              <Link
+                href="/how-it-works"
                 className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-7 py-4 text-base font-semibold text-slate-800 transition hover:border-slate-950 hover:text-slate-950"
               >
                 Poglej kako deluje
-              </a>
+              </Link>
             </div>
 
             <div className="mt-12 grid gap-4 sm:grid-cols-3">
@@ -146,10 +148,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section
-          id="how-it-works"
-          className="grid gap-6 border-t border-slate-200/80 py-12 lg:grid-cols-3"
-        >
+        <section className="grid gap-6 border-t border-slate-200/80 py-12 lg:grid-cols-3">
           {[
             [
               "Mood detection",
