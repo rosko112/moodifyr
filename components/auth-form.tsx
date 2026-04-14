@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { signInWithPassword, signUpWithPassword } from "@/lib/mock-supabase";
+import { isDatabaseConfigured } from "@/lib/neon";
 
 type AuthFormProps = {
   mode: "login" | "register";
@@ -15,21 +15,38 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(formData: FormData) {
+    if (!isDatabaseConfigured) {
+      setError(
+        "Baza še ni nastavljena. Vnesi DATABASE_URL v .env.local.",
+      );
+      return;
+    }
+
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
 
     setIsSubmitting(true);
     setError("");
 
-    const response =
-      mode === "register"
-        ? await signUpWithPassword(email, password)
-        : await signInWithPassword(email, password);
+    const response = await fetch(
+      mode === "register" ? "/api/auth/register" : "/api/auth/login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      },
+    );
+
+    const result = (await response.json()) as {
+      error?: string;
+    };
 
     setIsSubmitting(false);
 
-    if (response.error) {
-      setError(response.error.message);
+    if (!response.ok) {
+      setError(result.error ?? "Prišlo je do napake pri prijavi.");
       return;
     }
 
@@ -51,6 +68,11 @@ export function AuthForm({ mode }: AuthFormProps) {
             ? "Ustvari račun za dostop do povezave s Spotifyjem in priporočil glede na razpoloženje."
             : "Prijavi se in odkljeni funkcionalnosti, ki so na voljo prijavljenim uporabnikom."}
         </p>
+        {!isDatabaseConfigured ? (
+          <p className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Najprej nastavi <code>DATABASE_URL</code> v <code>.env.local</code>.
+          </p>
+        ) : null}
       </div>
 
       <form action={handleSubmit} className="grid gap-4">

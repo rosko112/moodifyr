@@ -2,19 +2,33 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getSession, signOut, type MockSession } from "@/lib/mock-supabase";
+import { isDatabaseConfigured } from "@/lib/neon";
+
+type SessionUser = {
+  id: number;
+  email: string;
+};
 
 export function AuthStatus() {
-  const [session, setSession] = useState<MockSession | null>(null);
+  const [user, setUser] = useState<SessionUser | null>(null);
 
   useEffect(() => {
+    if (!isDatabaseConfigured) {
+      return;
+    }
+
     let active = true;
 
     async function loadSession() {
-      const nextSession = await getSession();
+      const response = await fetch("/api/auth/session", {
+        credentials: "include",
+      });
+      const data = (await response.json()) as {
+        user: SessionUser | null;
+      };
 
       if (active) {
-        setSession(nextSession);
+        setUser(data.user);
       }
     }
 
@@ -26,8 +40,10 @@ export function AuthStatus() {
   }, []);
 
   async function handleSignOut() {
-    await signOut();
-    setSession(null);
+    await fetch("/api/auth/logout", {
+      method: "POST",
+    });
+    setUser(null);
   }
 
   return (
@@ -37,16 +53,22 @@ export function AuthStatus() {
           Dostop do funkcionalnosti
         </p>
         <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-950">
-          {session ? "Pripravljen za uporabo" : "Za uporabo se prijavi"}
+          {user
+            ? "Pripravljen za uporabo"
+            : isDatabaseConfigured
+              ? "Za uporabo se prijavi"
+              : "Nastavi Neon povezavo"}
         </h2>
         <p className="mt-3 text-sm leading-6 text-slate-600">
-          {session
-            ? `Prijavljen si kot ${session.user.email}. Zdaj lahko uporabljaš zaznavanje razpoloženja in dobiš priporočene pesmi.`
-            : "Naslovnica je javna, za povezavo s Spotifyjem in uporabo mood priporočil pa potrebuješ račun."}
+          {user
+            ? `Prijavljen si kot ${user.email}. Zdaj lahko uporabljaš zaznavanje razpoloženja in dobiš priporočene pesmi.`
+            : isDatabaseConfigured
+              ? "Naslovnica je javna, za povezavo s Spotifyjem in uporabo mood priporočil pa potrebuješ račun."
+              : "Dodaj DATABASE_URL v .env.local, potem bo login/register takoj deloval."}
         </p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          {session ? (
+          {user ? (
             <>
               <Link
                 href="/login"
@@ -62,7 +84,7 @@ export function AuthStatus() {
                 Odjava
               </button>
             </>
-          ) : (
+          ) : isDatabaseConfigured ? (
             <>
               <Link
                 href="/login"
@@ -77,6 +99,10 @@ export function AuthStatus() {
                 Register
               </Link>
             </>
+          ) : (
+            <div className="rounded-full bg-amber-50 px-5 py-3 text-sm font-semibold text-amber-800">
+              Čaka na tvoje Neon podatke
+            </div>
           )}
         </div>
       </div>
