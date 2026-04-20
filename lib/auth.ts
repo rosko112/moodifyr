@@ -1,8 +1,16 @@
+import "server-only";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { getSql, isDatabaseConfigured } from "@/lib/neon";
 
 const SESSION_COOKIE = "modifyr_session";
+
+export type SessionUser = {
+  id: number;
+  email: string;
+  username: string;
+};
 
 function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
@@ -36,8 +44,9 @@ export async function ensureAuthTables() {
 
   await sql`
     CREATE TABLE IF NOT EXISTS users (
-      id BIGSERIAL PRIMARY KEY,
+      id SERIAL PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
+      username TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
@@ -46,14 +55,40 @@ export async function ensureAuthTables() {
   await sql`
     CREATE TABLE IF NOT EXISTS sessions (
       token TEXT PRIMARY KEY,
-      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+
+  await sql`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS username TEXT
+  `;
+
+  await sql`
+    UPDATE users
+    SET username = CONCAT('user_', id)
+    WHERE username IS NULL OR btrim(username) = ''
+  `;
+
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS users_username_key
+    ON users (username)
+  `;
+
+  await sql`
+    ALTER TABLE users
+    ALTER COLUMN username SET NOT NULL
+  `;
 }
 
-export async function createUser(email: string, password: string) {
+export async function createUser(
+  email: string,
+  username: string,
+  password: string,
+) {
   const normalizedEmail = email.trim().toLowerCase();
+  const normalizedUsername = username.trim().toLowerCase();
   const sql = getSql();
 
   const existingUsers = await sql`
@@ -64,39 +99,65 @@ export async function createUser(email: string, password: string) {
   `;
 
   if (existingUsers.length > 0) {
-    return { error: "Uporabnik s tem e-poštnim naslovom že obstaja." };
+    return { error: "A user with that email already exists." };
+  }
+
+  const existingUsernames = await sql`
+    SELECT id
+    FROM users
+    WHERE username = ${normalizedUsername}
+    LIMIT 1
+  `;
+
+  if (existingUsernames.length > 0) {
+    return { error: "That username is already taken." };
   }
 
   const passwordHash = hashPassword(password);
 
   const insertedUsers = await sql`
-    INSERT INTO users (email, password_hash)
-    VALUES (${normalizedEmail}, ${passwordHash})
-    RETURNING id, email
+    INSERT INTO users (email, username, password_hash)
+    VALUES (${normalizedEmail}, ${normalizedUsername}, ${passwordHash})
+    RETURNING id, email, username
   `;
 
-  return { user: insertedUsers[0], error: null };
+  return {
+    user: {
+      id: Number(insertedUsers[0].id),
+      email: insertedUsers[0].email,
+      username: insertedUsers[0].username,
+    },
+    error: null,
+  };
 }
 
-export async function authenticateUser(email: string, password: string) {
-  const normalizedEmail = email.trim().toLowerCase();
+export async function authenticateUser(identifier: string, password: string) {
+  const normalizedIdentifier = identifier.trim().toLowerCase();
   const sql = getSql();
 
   const users = await sql`
-    SELECT id, email, password_hash
+    SELECT id, email, username, password_hash
     FROM users
-    WHERE email = ${normalizedEmail}
+    WHERE email = ${normalizedIdentifier}
+      OR username = ${normalizedIdentifier}
     LIMIT 1
   `;
 
   const user = users[0];
 
   if (!user || !verifyPassword(password, user.password_hash)) {
-    return { user: null, error: "Napačen e-poštni naslov ali geslo." };
+    return {
+      user: null,
+      error: "Incorrect email, username, or password.",
+    };
   }
 
   return {
-    user: { id: user.id, email: user.email },
+    user: {
+      id: Number(user.id),
+      email: user.email,
+      username: user.username,
+    },
     error: null,
   };
 }
@@ -141,6 +202,8 @@ export async function getCurrentSessionUser() {
     return null;
   }
 
+  await ensureAuthTables();
+
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
 
@@ -150,12 +213,40 @@ export async function getCurrentSessionUser() {
 
   const sql = getSql();
   const users = await sql`
-    SELECT users.id, users.email
+    SELECT users.id, users.email, users.username
     FROM sessions
     INNER JOIN users ON users.id = sessions.user_id
     WHERE sessions.token = ${token}
     LIMIT 1
   `;
 
-  return users[0] ?? null;
+  const user = users[0];
+
+  if (!user) {
+    return null;
+  }
+
+  return {
+    id: Number(user.id),
+    email: user.email,
+    username: user.username,
+  } satisfies SessionUser;
+}
+
+export async function requireSessionUser() {
+  const user = await getCurrentSessionUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  return user;
+}
+
+export async function redirectAuthenticatedUser() {
+  const user = await getCurrentSessionUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
 }

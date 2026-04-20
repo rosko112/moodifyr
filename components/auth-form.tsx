@@ -3,55 +3,69 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { isDatabaseConfigured } from "@/lib/neon";
 
 type AuthFormProps = {
   mode: "login" | "register";
+  isDatabaseConfigured: boolean;
 };
 
-export function AuthForm({ mode }: AuthFormProps) {
+export function AuthForm({ mode, isDatabaseConfigured }: AuthFormProps) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(formData: FormData) {
-    if (!isDatabaseConfigured) {
-      setError(
-        "Baza še ni nastavljena. Vnesi DATABASE_URL v .env.local.",
-      );
-      return;
-    }
-
-    const email = String(formData.get("email") ?? "");
+    const identifier = String(
+      formData.get(mode === "register" ? "email" : "identifier") ?? "",
+    );
+    const username = String(formData.get("username") ?? "");
     const password = String(formData.get("password") ?? "");
 
     setIsSubmitting(true);
     setError("");
 
-    const response = await fetch(
-      mode === "register" ? "/api/auth/register" : "/api/auth/login",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    try {
+      const response = await fetch(
+        mode === "register" ? "/api/auth/register" : "/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(
+            mode === "register"
+              ? { email: identifier, username, password }
+              : { identifier, password },
+          ),
         },
-        body: JSON.stringify({ email, password }),
-      },
-    );
+      );
 
-    const result = (await response.json()) as {
-      error?: string;
-    };
+      const rawBody = await response.text();
+      let result: { error?: string } = {};
 
-    setIsSubmitting(false);
+      if (rawBody) {
+        try {
+          result = JSON.parse(rawBody) as { error?: string };
+        } catch {
+          result = {};
+        }
+      }
 
-    if (!response.ok) {
-      setError(result.error ?? "Prišlo je do napake pri prijavi.");
-      return;
+      if (!response.ok) {
+        setError(
+          result.error ??
+            "Streznik je vrnil napako pri prijavi oziroma registraciji.",
+        );
+        return;
+      }
+
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setError("Povezava s streznikom ni uspela.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    router.push("/");
-    router.refresh();
   }
 
   return (
@@ -61,28 +75,45 @@ export function AuthForm({ mode }: AuthFormProps) {
           modifyr
         </p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
-          {mode === "register" ? "Ustvari račun" : "Prijava"}
+          {mode === "register" ? "Ustvari racun" : "Prijava"}
         </h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">
           {mode === "register"
-            ? "Ustvari račun za dostop do povezave s Spotifyjem in priporočil glede na razpoloženje."
-            : "Prijavi se in odkljeni funkcionalnosti, ki so na voljo prijavljenim uporabnikom."}
+            ? "Ustvari racun za dostop do povezave s Spotifyjem in priporocil glede na razpolozenje."
+            : "Prijavi se in odkleni funkcionalnosti, ki so na voljo prijavljenim uporabnikom."}
         </p>
         {!isDatabaseConfigured ? (
           <p className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Najprej nastavi <code>DATABASE_URL</code> v <code>.env.local</code>.
+            Najprej nastavi <code>DATABASE_URL</code> v <code>.env.local</code>{" "}
+            ali <code>.env</code>.
           </p>
         ) : null}
       </div>
 
       <form action={handleSubmit} className="grid gap-4">
+        {mode === "register" ? (
+          <label className="grid gap-2 text-sm font-medium text-slate-700">
+            Username
+            <input
+              name="username"
+              type="text"
+              minLength={3}
+              maxLength={32}
+              pattern="[a-zA-Z0-9_]+"
+              required
+              placeholder="your_name"
+              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-emerald-500 focus:bg-white"
+            />
+          </label>
+        ) : null}
+
         <label className="grid gap-2 text-sm font-medium text-slate-700">
-          E-pošta
+          {mode === "register" ? "E-posta" : "Email or username"}
           <input
-            name="email"
-            type="email"
+            name={mode === "register" ? "email" : "identifier"}
+            type={mode === "register" ? "email" : "text"}
             required
-            placeholder="ime@primer.si"
+            placeholder={mode === "register" ? "name@example.com" : "name@example.com or your_name"}
             className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-emerald-500 focus:bg-white"
           />
         </label>
@@ -111,7 +142,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           className="mt-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting
-            ? "Počakaj trenutek ..."
+            ? "Pocakaj trenutek ..."
             : mode === "register"
               ? "Registriraj se"
               : "Prijavi se"}
@@ -119,7 +150,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       </form>
 
       <div className="mt-6 text-sm text-slate-600">
-        {mode === "register" ? "Že imaš račun?" : "Še nimaš računa?"}{" "}
+        {mode === "register" ? "Ze imas racun?" : "Se nimas racuna?"}{" "}
         <Link
           href={mode === "register" ? "/login" : "/register"}
           className="font-semibold text-emerald-700 hover:text-emerald-800"
