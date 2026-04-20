@@ -9,7 +9,7 @@ export default function DashboardPage() {
           {[
             ["Moods logged", "7"],
             ["Liked songs", "124"],
-            ["Avg session", "26 min"],
+            ["Avg session", "27 min"],
             ["Playlists made", "4"],
           ].map(([label, value]) => (
             <div
