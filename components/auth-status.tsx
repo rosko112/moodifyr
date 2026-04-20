@@ -2,33 +2,35 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { isDatabaseConfigured } from "@/lib/neon";
 
 type SessionUser = {
   id: number;
   email: string;
+  username: string;
 };
 
 export function AuthStatus() {
   const [user, setUser] = useState<SessionUser | null>(null);
+  const [isDatabaseConfigured, setIsDatabaseConfigured] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
-    if (!isDatabaseConfigured) {
-      return;
-    }
-
     let active = true;
 
     async function loadSession() {
       const response = await fetch("/api/auth/session", {
         credentials: "include",
       });
+
       const data = (await response.json()) as {
+        configured: boolean;
         user: SessionUser | null;
       };
 
       if (active) {
+        setIsDatabaseConfigured(Boolean(data.configured));
         setUser(data.user);
+        setHasLoaded(true);
       }
     }
 
@@ -53,28 +55,32 @@ export function AuthStatus() {
           Dostop do funkcionalnosti
         </p>
         <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-950">
-          {user
-            ? "Pripravljen za uporabo"
-            : isDatabaseConfigured
-              ? "Za uporabo se prijavi"
-              : "Nastavi Neon povezavo"}
+          {!hasLoaded
+            ? "Preverjam povezavo"
+            : user
+              ? "Pripravljen za uporabo"
+              : isDatabaseConfigured
+                ? "Za uporabo se prijavi"
+                : "Nastavi Neon povezavo"}
         </h2>
         <p className="mt-3 text-sm leading-6 text-slate-600">
-          {user
-            ? `Prijavljen si kot ${user.email}. Zdaj lahko uporabljaš zaznavanje razpoloženja in dobiš priporočene pesmi.`
-            : isDatabaseConfigured
-              ? "Naslovnica je javna, za povezavo s Spotifyjem in uporabo mood priporočil pa potrebuješ račun."
-              : "Dodaj DATABASE_URL v .env.local, potem bo login/register takoj deloval."}
+          {!hasLoaded
+            ? "Preverjam, ali je baza pripravljena in ali ze obstaja aktivna seja."
+            : user
+              ? `Signed in as @${user.username} (${user.email}). Dashboard, Spotify sync, and mood features are unlocked.`
+              : isDatabaseConfigured
+                ? "Naslovnica je javna, za povezavo s Spotifyjem in uporabo mood priporocil pa potrebujes racun."
+                : "Dodaj DATABASE_URL v .env.local ali .env, potem bo login/register takoj deloval."}
         </p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           {user ? (
             <>
               <Link
-                href="/login"
+                href="/dashboard"
                 className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
-                Nadaljuj v aplikacijo
+                Continue to dashboard
               </Link>
               <button
                 type="button"
@@ -84,7 +90,7 @@ export function AuthStatus() {
                 Odjava
               </button>
             </>
-          ) : isDatabaseConfigured ? (
+          ) : hasLoaded && isDatabaseConfigured ? (
             <>
               <Link
                 href="/login"
@@ -99,9 +105,13 @@ export function AuthStatus() {
                 Register
               </Link>
             </>
-          ) : (
+          ) : hasLoaded ? (
             <div className="rounded-full bg-amber-50 px-5 py-3 text-sm font-semibold text-amber-800">
-              Čaka na tvoje Neon podatke
+              Caka na tvoje Neon podatke
+            </div>
+          ) : (
+            <div className="rounded-full bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-600">
+              Nalagam stanje prijave
             </div>
           )}
         </div>
@@ -113,9 +123,9 @@ export function AuthStatus() {
         </p>
         <div className="mt-5 grid gap-3">
           {[
-            ["Spotify povezava", "sinhronizacija profila in poslušalskih navad"],
-            ["Vnos počutja", "opis razpoloženja v naravnem jeziku"],
-            ["Pametna priporočila", "predlogi pesmi glede na trenutni vibe"],
+            ["Spotify povezava", "sinhronizacija profila in poslusalnih navad"],
+            ["Vnos pocutja", "opis razpolozenja v naravnem jeziku"],
+            ["Pametna priporocila", "predlogi pesmi glede na trenutni vibe"],
           ].map(([title, copy]) => (
             <div
               key={title}

@@ -14,7 +14,7 @@ export default function Home() {
             </div>
             <div>
               <p className="text-lg font-semibold tracking-tight text-slate-950">
-                modifyr
+                moodfyr
               </p>
               <p className="text-sm text-slate-500">mood to music, instantly</p>
             </div>
@@ -197,3 +197,4 @@ export default function Home() {
     </main>
   );
 }
+

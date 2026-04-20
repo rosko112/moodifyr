@@ -1,0 +1,25 @@
+⨯ Error [NeonDbError]: null value in column "username" of relation "users" violates not-null constraint
+    at tE.execute (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\[root-of-the-server]__0nli1_4._.js:14:10934)
+    at async tD (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\[root-of-the-server]__0nli1_4._.js:36:194)
+    at async E (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\[root-of-the-server]__05koq4~._.js:1:1582)
+    at async l (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\[root-of-the-server]__05koq4~._.js:1:4957)
+    at async o (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\[root-of-the-server]__05koq4~._.js:1:5998)
+    at async Module.T [as handler] (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\[root-of-the-server]__05koq4~._.js:1:7105) {
+  severity: 'ERROR',
+  code: '23502',
+  detail: 'Failing row contains (1, null, codex-test-1776686394317@example.com, 15571b73490d095e7196f372550d4f08:dcbffa1c56e1d11676c886cac8d08b4..., 2026-04-20 11:59:55.428134+00, null, null, null).',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'users',
+  column: 'username',
+  dataType: undefined,
+  constraint: undefined,
+  file: 'execMain.c',
+  line: '2032',
+  routine: 'ExecConstraints',
+  sourceError: undefined
+}
