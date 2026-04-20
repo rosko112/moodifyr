@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/auth-form";
+import { redirectAuthenticatedUser } from "@/lib/auth";
+import { isDatabaseConfigured } from "@/lib/neon";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  await redirectAuthenticatedUser();
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,_#f8fafc_0%,_#ecfdf5_100%)] px-6 py-10">
       <div className="grid w-full max-w-5xl gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
@@ -25,7 +29,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <AuthForm mode="login" />
+        <AuthForm mode="login" isDatabaseConfigured={isDatabaseConfigured} />
       </div>
     </main>
   );
