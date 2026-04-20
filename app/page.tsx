@@ -12,7 +12,7 @@ export default function Home() {
             </div>
             <div>
               <p className="text-lg font-semibold tracking-tight text-slate-950">
-                modifyr
+                moodfyr
               </p>
               <p className="text-sm text-slate-500">mood to music, instantly</p>
             </div>
@@ -36,7 +36,7 @@ export default function Home() {
               <span className="block text-[#1db954]"> kako se počutiš.</span>
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">
-              Modifyr poveže tvoj Spotify račun, prebere tvoj opis
+              moodfyr poveže tvoj Spotify račun, prebere tvoj opis
               razpoloženja in v nekaj sekundah predlaga pesmi, ki zadenejo
               točno pravi vibe.
             </p>
@@ -181,3 +181,4 @@ export default function Home() {
     </main>
   );
 }
+
