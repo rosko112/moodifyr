@@ -94,19 +94,22 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-white/60 bg-[linear-gradient(180deg,_rgba(15,23,42,0.98)_0%,_rgba(30,41,59,0.98)_100%)] p-5 shadow-[0_35px_90px_rgba(15,23,42,0.22)]">
-            <div className="rounded-[1.6rem] border border-white/10 bg-white/6 p-6 text-white">
+          <div
+            id="preview"
+            className="relative mx-auto w-full max-w-xl rounded-[2rem] border border-white/60 bg-[linear-gradient(180deg,_rgba(15,23,42,0.97)_0%,_rgba(30,41,59,0.97)_100%)] p-5 shadow-[0_35px_90px_rgba(15,23,42,0.28)]"
+          >
+            <div className="rounded-[1.6rem] border border-white/10 bg-white/5 p-6 text-white backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm uppercase tracking-[0.25em] text-white/45">
-                    Predogled aplikacije
+                    Live Preview
                   </p>
                   <h2 className="mt-2 text-2xl font-semibold">
-                    Mood engine
+                    Tvoj mood engine
                   </h2>
                 </div>
                 <div className="rounded-full bg-[#1db954] px-4 py-2 text-sm font-semibold text-slate-950">
-                  Spotify ready
+                  Spotify linked
                 </div>
               </div>
 
@@ -160,6 +163,34 @@ export default function Home() {
 
         <section className="border-t border-slate-200/80 py-12">
           <AuthStatus />
+        <section className="grid gap-6 border-t border-slate-200/80 py-12 lg:grid-cols-3">
+          {[
+            [
+              "Mood detection",
+              "Analiza opisa razpoloženja prepozna energijo, tempo in emocionalni ton.",
+            ],
+            [
+              "Pametno ujemanje",
+              "Predlogi so usklajeni s tvojim trenutnim počutjem in navadami na Spotifyju.",
+            ],
+            [
+              "Playlist-ready rezultat",
+              "Uporabnik dobi takojšnje predloge za poslušanje brez ročnega iskanja.",
+            ],
+          ].map(([title, copy]) => (
+            <article
+              key={title}
+              className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.05)]"
+            >
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#1db954]">
+                Feature
+              </p>
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+                {title}
+              </h2>
+              <p className="mt-4 text-base leading-7 text-slate-600">{copy}</p>
+            </article>
+          ))}
         </section>
       </div>
     </main>
