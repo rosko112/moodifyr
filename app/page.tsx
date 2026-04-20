@@ -163,6 +163,7 @@ export default function Home() {
 
         <section className="border-t border-slate-200/80 py-12">
           <AuthStatus />
+        </section>
         <section className="grid gap-6 border-t border-slate-200/80 py-12 lg:grid-cols-3">
           {[
             [
