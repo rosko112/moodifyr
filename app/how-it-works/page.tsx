@@ -5,7 +5,7 @@ const steps = [
     label: "01",
     title: "Poveži svoj Spotify račun",
     description:
-      "Uporabnik se prijavi prek Spotify OAuth povezave, da lahko modifyr razume njegov glasbeni okus in navade poslušanja.",
+      "Uporabnik se prijavi prek Spotify OAuth povezave, da lahko moodfyr razume njegov glasbeni okus in navade poslušanja.",
   },
   {
     label: "02",
@@ -15,7 +15,7 @@ const steps = [
   },
   {
     label: "03",
-    title: "Modifyr zazna mood",
+    title: "moodfyr zazna mood",
     description:
       "Sistem iz opisa razbere ton, intenzivnost in atmosfero ter jih poveže s primernimi glasbenimi lastnostmi.",
   },
@@ -46,7 +46,7 @@ export default function HowItWorksPage() {
             </div>
             <div>
               <p className="text-lg font-semibold tracking-tight text-slate-950">
-                modifyr
+                moodfyr
               </p>
               <p className="text-sm text-slate-500">Kako deluje</p>
             </div>
@@ -67,7 +67,7 @@ export default function HowItWorksPage() {
             </div>
 
             <h1 className="mt-6 max-w-4xl text-5xl font-black tracking-[-0.06em] text-slate-950 sm:text-6xl">
-              Tako modifyr pretvori
+              Tako moodfyr pretvori
               <span className="block text-[#1db954]">
                 tvoje razpoloženje v glasbo.
               </span>
@@ -75,7 +75,7 @@ export default function HowItWorksPage() {
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
               Stran je zasnovana za hiter in naraven flow. Uporabnik ne išče po
-              žanrih ali playlistah, ampak samo pove, kako se počuti. Modifyr
+              žanrih ali playlistah, ampak samo pove, kako se počuti. moodfyr
               nato iz tega sestavi priporočila, ki bolj zadenejo trenutek.
             </p>
 
@@ -162,3 +162,4 @@ export default function HowItWorksPage() {
     </main>
   );
 }
+
