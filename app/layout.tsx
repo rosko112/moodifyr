@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "moodfyr | Mood-based Spotify music discovery",
+  title: "modifyr | Mood-based Spotify recommendations",
   description:
-    "Poveži Spotify, opiši svoje razpoloženje in prejmi glasbena priporočila, prilagojena tvojemu trenutnemu vibeu.",
+    "Poveži Spotify, opiši svoje razpoloženje in odkrij pesmi, ki se ujemajo s tvojim trenutnim vibeom.",
 };
 
 export default function RootLayout({
