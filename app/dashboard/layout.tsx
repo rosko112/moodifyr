@@ -1,14 +1,11 @@
 import Link from "next/link";
-import { requireSessionUser } from "@/lib/auth";
 import DashboardNav from "./_components/dashboard-nav";
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireSessionUser();
-
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#041108] text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_10%,_rgba(29,185,84,0.34),_transparent_36%),radial-gradient(circle_at_82%_20%,_rgba(16,185,129,0.28),_transparent_34%),linear-gradient(160deg,_#041108_0%,_#0a1c12_38%,_#03170d_100%)]" />
@@ -26,7 +23,6 @@ export default async function DashboardLayout({
               <p className="text-xs uppercase tracking-[0.2em] text-emerald-200/70">
                 dashboard
               </p>
-              <p className="text-sm text-white/65">@{user.username}</p>
             </div>
           </div>
 
@@ -53,12 +49,8 @@ export default async function DashboardLayout({
                   Moodify Workspace
                 </p>
                 <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
-                  Welcome back, {user.username}.
+                  Welcome back, your mood is now your playlist.
                 </h1>
-                <p className="mt-2 text-sm text-white/65">
-                  Spotify sync, mood input, and app features are available only
-                  for signed-in users.
-                </p>
               </div>
               <Link
                 href="/how-it-works"
