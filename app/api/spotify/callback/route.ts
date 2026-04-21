@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { query } from "@/lib/db";
+import { ensureSpotifyConnectionsSchema } from "@/lib/dashboard-data";
+import { getSpotifyRedirectUri } from "@/lib/spotify";
 
 type SpotifyTokenResponse = {
   access_token: string;
@@ -14,8 +16,6 @@ type SpotifyMeResponse = {
   id: string;
   display_name: string | null;
 };
-type ExistsRow = { exists: string | null };
-
 export const runtime = "nodejs";
 
 function redirectToSync(request: Request, queryParam: string) {
@@ -48,20 +48,13 @@ export async function GET(request: Request) {
 
     const clientId = process.env.SPOTIFY_CLIENT_ID;
     const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-    const redirectUri =
-      process.env.SPOTIFY_REDIRECT_URI ??
-      `${new URL(request.url).origin}/api/spotify/callback`;
+    const redirectUri = getSpotifyRedirectUri(request.url);
 
     if (!clientId || !clientSecret) {
       return redirectToSync(request, "error=config");
     }
 
-    const tableCheck = await query<ExistsRow>(
-      "SELECT to_regclass('public.spotify_connections') AS exists",
-    );
-    if (!tableCheck[0]?.exists) {
-      return redirectToSync(request, "error=missing_spotify_table");
-    }
+    await ensureSpotifyConnectionsSchema();
 
     const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
     const tokenResponse = await fetch("https://accounts.spotify.com/api/token", {

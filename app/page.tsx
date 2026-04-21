@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AuthStatus } from "@/components/auth-status";
+import { PublicHeaderActions } from "@/components/public-header-actions";
 
 const steps = [
   ["01", "Connect Spotify", "Link your account and unlock listening data that moodfyr uses to make sharper recommendations."],
@@ -57,18 +58,7 @@ export default function Home() {
               >
                 How it works
               </Link>
-              <Link
-                href="/login"
-                className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white/90 transition hover:border-white/45 hover:bg-white/10"
-              >
-                Login
-              </Link>
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center rounded-full border-2 border-emerald-200/40 bg-[#1ed760] px-6 py-3 text-sm font-black tracking-wide text-[#03220f] shadow-[0_12px_30px_rgba(30,215,96,0.35)] transition hover:bg-[#25e56b]"
-              >
-                Register
-              </Link>
+              <PublicHeaderActions />
             </div>
           </div>
         </header>

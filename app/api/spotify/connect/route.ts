@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getCurrentSessionUser } from "@/lib/auth";
+import { getSpotifyRedirectUri } from "@/lib/spotify";
 
 const SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize";
 export const runtime = "nodejs";
@@ -17,9 +18,7 @@ export async function GET(request: Request) {
   }
 
   const state = randomUUID();
-  const redirectUri =
-    process.env.SPOTIFY_REDIRECT_URI ??
-    `${new URL(request.url).origin}/api/spotify/callback`;
+  const redirectUri = getSpotifyRedirectUri(request.url);
 
   const authUrl = new URL(SPOTIFY_AUTH_URL);
   authUrl.searchParams.set("client_id", clientId);
