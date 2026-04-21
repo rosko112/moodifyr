@@ -17,7 +17,7 @@ type TrackResult = {
   previewUrl: string | null;
 };
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-3-flash-preview";
 
 function readRequiredEnv(keys: string[]) {
   for (const key of keys) {
