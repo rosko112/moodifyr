@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { query } from "@/lib/db";
-import { getDefaultUserId } from "@/lib/dashboard-data";
 
 type SpotifyTokenResponse = {
   access_token: string;
@@ -36,12 +35,14 @@ export async function GET(request: Request) {
     const cookieStore = await cookies();
     const expectedState = cookieStore.get("moodfyr_spotify_state")?.value;
     const userIdFromCookie = Number(cookieStore.get("moodfyr_user_id")?.value ?? "");
-    const userId =
-      Number.isInteger(userIdFromCookie) && userIdFromCookie > 0
-        ? userIdFromCookie
-        : getDefaultUserId();
+    const userId = Number.isInteger(userIdFromCookie) && userIdFromCookie > 0
+      ? userIdFromCookie
+      : null;
 
     if (!expectedState || expectedState !== state) {
+      return redirectToSync(request, "error=invalid_state");
+    }
+    if (!userId) {
       return redirectToSync(request, "error=invalid_state");
     }
 

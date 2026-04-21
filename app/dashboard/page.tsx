@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { getDashboardOverview, getDefaultUserId } from "@/lib/dashboard-data";
+import { getDashboardOverview } from "@/lib/dashboard-data";
+import { requireSessionUser } from "@/lib/auth";
 
 export default async function DashboardPage() {
-  const stats = await getDashboardOverview(getDefaultUserId());
+  const user = await requireSessionUser();
+  const stats = await getDashboardOverview(user.id);
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">

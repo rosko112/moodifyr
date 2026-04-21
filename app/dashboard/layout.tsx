@@ -1,13 +1,16 @@
 import Link from "next/link";
 import DashboardNav from "./_components/dashboard-nav";
-import { getDefaultUserId, getSpotifySyncData } from "@/lib/dashboard-data";
+import LogoutButton from "./_components/logout-button";
+import { getSpotifySyncData } from "@/lib/dashboard-data";
+import { requireSessionUser } from "@/lib/auth";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const sync = await getSpotifySyncData(getDefaultUserId());
+  const user = await requireSessionUser();
+  const sync = await getSpotifySyncData(user.id);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#041108] text-white">
@@ -79,6 +82,7 @@ export default async function DashboardLayout({
                 >
                   How it works
                 </Link>
+                <LogoutButton />
               </div>
             </div>
           </header>

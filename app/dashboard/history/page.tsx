@@ -1,4 +1,5 @@
-import { getDashboardHistory, getDefaultUserId } from "@/lib/dashboard-data";
+import { getDashboardHistory } from "@/lib/dashboard-data";
+import { requireSessionUser } from "@/lib/auth";
 
 function formatTime(value: string) {
   const date = new Date(value);
@@ -12,7 +13,8 @@ function formatTime(value: string) {
 }
 
 export default async function HistoryPage() {
-  const moodHistory = await getDashboardHistory(getDefaultUserId());
+  const user = await requireSessionUser();
+  const moodHistory = await getDashboardHistory(user.id);
 
   return (
     <article className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">

@@ -3,34 +3,34 @@ import Link from "next/link";
 const steps = [
   {
     label: "01",
-    title: "Poveži svoj Spotify račun",
+    title: "Connect your Spotify account",
     description:
-      "Uporabnik se prijavi prek Spotify OAuth povezave, da lahko moodfyr razume njegov glasbeni okus in navade poslušanja.",
+      "Sign in through Spotify OAuth so moodfyr can understand your listening taste and playback habits.",
   },
   {
     label: "02",
-    title: "Napiši, kako se počutiš",
+    title: "Describe how you feel",
     description:
-      "V nekaj besedah opišeš svoje trenutno razpoloženje, energijo ali situacijo, na primer: miren večer, motivacija za trening ali žalosten dan.",
+      "Write your current mood, energy, or situation in a few words, such as a calm evening, workout motivation, or a low-energy day.",
   },
   {
     label: "03",
-    title: "moodfyr zazna mood",
+    title: "moodfyr detects the mood",
     description:
-      "Sistem iz opisa razbere ton, intenzivnost in atmosfero ter jih poveže s primernimi glasbenimi lastnostmi.",
+      "The system reads tone, intensity, and atmosphere from your text and maps them to musical traits that fit the moment.",
   },
   {
     label: "04",
-    title: "Dobiš priporočene pesmi",
+    title: "Get recommended songs",
     description:
-      "Aplikacija predlaga izvajalce, komade ali vibe-based sezname, ki ustrezajo tvojemu počutju in se lepo ujemajo s tvojim Spotify profilom.",
+      "The app suggests artists, tracks, and vibe-based picks that match your mood and align with your Spotify profile.",
   },
 ];
 
 const examples = [
-  ["Počutje", "Zaspan, malo melanholičen, ampak želim nekaj toplega."],
-  ["Zaznan mood", "Calm / reflective / warm"],
-  ["Predlog", "Phoebe Bridgers, Cigarettes After Sex, Bon Iver"],
+  ["Mood", "Sleepy, slightly melancholic, but I want something warm."],
+  ["Detected mood", "Calm / reflective / warm"],
+  ["Suggested artists", "Phoebe Bridgers, Cigarettes After Sex, Bon Iver"],
 ];
 
 export default function HowItWorksPage() {
@@ -48,14 +48,14 @@ export default function HowItWorksPage() {
               <p className="text-lg font-semibold tracking-tight text-slate-950">
                 moodfyr
               </p>
-              <p className="text-sm text-slate-500">Kako deluje</p>
+              <p className="text-sm text-slate-500">How it works</p>
             </div>
           </div>
           <Link
             href="/"
             className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:text-slate-950"
           >
-            Nazaj na landing page
+            Back to landing page
           </Link>
         </header>
 
@@ -63,20 +63,18 @@ export default function HowItWorksPage() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-900">
               <span className="h-2 w-2 rounded-full bg-[#1db954]" />
-              Od občutka do prave pesmi v štirih korakih
+              From feeling to the right song in four steps
             </div>
 
             <h1 className="mt-6 max-w-4xl text-5xl font-black tracking-[-0.06em] text-slate-950 sm:text-6xl">
-              Tako moodfyr pretvori
-              <span className="block text-[#1db954]">
-                tvoje razpoloženje v glasbo.
-              </span>
+              This is how moodfyr turns
+              <span className="block text-[#1db954]">your mood into music.</span>
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-              Stran je zasnovana za hiter in naraven flow. Uporabnik ne išče po
-              žanrih ali playlistah, ampak samo pove, kako se počuti. moodfyr
-              nato iz tega sestavi priporočila, ki bolj zadenejo trenutek.
+              The flow is built to feel fast and natural. Instead of searching
+              through genres or playlists, the user simply says how they feel.
+              moodfyr then turns that into recommendations that fit the moment.
             </p>
 
             <div className="mt-10 grid gap-4">
@@ -107,10 +105,10 @@ export default function HowItWorksPage() {
             <div className="rounded-[2rem] border border-white/60 bg-[linear-gradient(180deg,_rgba(15,23,42,0.98)_0%,_rgba(30,41,59,0.98)_100%)] p-5 shadow-[0_35px_90px_rgba(15,23,42,0.22)]">
               <div className="rounded-[1.6rem] border border-white/10 bg-white/6 p-6 text-white">
                 <p className="text-sm uppercase tracking-[0.24em] text-white/45">
-                  Primer flowa
+                  Example flow
                 </p>
                 <h2 className="mt-3 text-2xl font-semibold">
-                  Kaj uporabnik dejansko naredi?
+                  What does the user actually do?
                 </h2>
 
                 <div className="mt-8 grid gap-4">
@@ -131,12 +129,12 @@ export default function HowItWorksPage() {
 
                 <div className="mt-8 rounded-[1.6rem] bg-white p-5 text-slate-900">
                   <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Zakaj je to uporabno
+                    Why this is useful
                   </p>
                   <p className="mt-3 text-base leading-7 text-slate-700">
-                    Uporabnik hitreje pride do glasbe, ki ustreza njegovemu
-                    trenutnemu stanju, brez dolgega iskanja in brez generičnih
-                    playlist.
+                    The user reaches music that matches their current state
+                    faster, without long searches and without falling back to
+                    generic playlists.
                   </p>
                 </div>
 
@@ -145,13 +143,13 @@ export default function HowItWorksPage() {
                     href="/"
                     className="inline-flex items-center justify-center rounded-full bg-[#1db954] px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-[#19a74c]"
                   >
-                    Nazaj na naslovnico
+                    Back to home
                   </Link>
                   <Link
-                    href="/#connect"
+                    href="/register"
                     className="inline-flex items-center justify-center rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:border-white/40"
                   >
-                    Poveži Spotify
+                    Connect Spotify
                   </Link>
                 </div>
               </div>
@@ -162,4 +160,3 @@ export default function HowItWorksPage() {
     </main>
   );
 }
-

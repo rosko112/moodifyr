@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { ensureHistorySchema, getDefaultUserId } from "@/lib/dashboard-data";
+import { ensureHistorySchema } from "@/lib/dashboard-data";
+import { getCurrentSessionUser } from "@/lib/auth";
 
 type SpotifyTrack = {
   name: string;
@@ -182,25 +183,13 @@ function toTrackResult(track: SpotifyTrack): TrackResult {
   };
 }
 
-function getUserId(req: Request) {
-  const url = new URL(req.url);
-  const fromQuery = Number(url.searchParams.get("userId"));
-  if (Number.isInteger(fromQuery) && fromQuery > 0) return fromQuery;
-
-  const fromHeader = Number(req.headers.get("x-user-id"));
-  if (Number.isInteger(fromHeader) && fromHeader > 0) return fromHeader;
-
-  return getDefaultUserId();
-}
-
 async function saveMoodHistory(
-  request: Request,
+  userId: number,
   moodText: string,
   moodKeyword: string,
   tracks: TrackResult[],
 ) {
   await ensureHistorySchema();
-  const userId = getUserId(request);
   await query(
     `INSERT INTO user_history (user_id, mood_text, mood_keyword, recommended_tracks)
      VALUES ($1, $2, $3, $4::jsonb)`,
@@ -210,6 +199,14 @@ async function saveMoodHistory(
 
 export async function POST(request: Request) {
   try {
+    const user = await getCurrentSessionUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 },
+      );
+    }
+
     const body = (await request.json()) as { text?: string };
     const text = body.text?.trim();
 
@@ -225,7 +222,7 @@ export async function POST(request: Request) {
     const playlistIds = await searchPlaylists(spotifyToken, keyword);
 
     if (!playlistIds.length) {
-      await saveMoodHistory(request, text, keyword, []);
+      await saveMoodHistory(user.id, text, keyword, []);
       return NextResponse.json({ keyword, tracks: [] });
     }
 
@@ -248,7 +245,7 @@ export async function POST(request: Request) {
       .slice(0, 6)
       .map(toTrackResult);
 
-    await saveMoodHistory(request, text, keyword, randomSix);
+    await saveMoodHistory(user.id, text, keyword, randomSix);
 
     return NextResponse.json({
       keyword,
