@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { execute, query } from "@/lib/db";
+import { getCurrentSessionUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -15,18 +16,13 @@ type LikedSongRow = {
 
 let schemaReady = false;
 
-function getUserId(req: Request) {
-  const url = new URL(req.url);
-  const fromQuery = url.searchParams.get("userId");
-  const parsedQuery = Number(fromQuery);
-  if (Number.isInteger(parsedQuery) && parsedQuery > 0) return parsedQuery;
+async function requireApiUser() {
+  const user = await getCurrentSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  }
 
-  const fromHeader = req.headers.get("x-user-id");
-  const parsedHeader = Number(fromHeader);
-  if (Number.isInteger(parsedHeader) && parsedHeader > 0) return parsedHeader;
-
-  const fromEnv = Number(process.env.MOODFYR_DEFAULT_USER_ID ?? "1");
-  return Number.isInteger(fromEnv) && fromEnv > 0 ? fromEnv : 1;
+  return user;
 }
 
 async function ensureSchema() {
@@ -65,13 +61,14 @@ function toResponseSong(song: LikedSongRow) {
 export async function GET(request: Request) {
   try {
     await ensureSchema();
-    const userId = getUserId(request);
+    const user = await requireApiUser();
+    if (user instanceof NextResponse) return user;
     const rows = await query<LikedSongRow>(
       `SELECT id, user_id, title, artist, spotify_url, preview_url, liked_at
        FROM liked_songs
        WHERE user_id = $1
        ORDER BY liked_at DESC`,
-      [userId],
+      [user.id],
     );
 
     return NextResponse.json({ songs: rows.map(toResponseSong) });
@@ -85,7 +82,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     await ensureSchema();
-    const userId = getUserId(request);
+    const user = await requireApiUser();
+    if (user instanceof NextResponse) return user;
     const body = (await request.json()) as {
       title?: string;
       artist?: string;
@@ -109,7 +107,7 @@ export async function POST(request: Request) {
        ON CONFLICT (user_id, title, artist, spotify_url) DO UPDATE
        SET preview_url = EXCLUDED.preview_url
        RETURNING id, user_id, title, artist, spotify_url, preview_url, liked_at`,
-      [userId, title, artist, body.spotifyUrl ?? null, body.previewUrl ?? null],
+      [user.id, title, artist, body.spotifyUrl ?? null, body.previewUrl ?? null],
     );
 
     return NextResponse.json({ song: toResponseSong(rows[0]) });
@@ -125,7 +123,8 @@ export async function DELETE(request: Request) {
     await ensureSchema();
     const url = new URL(request.url);
     const id = Number(url.searchParams.get("id"));
-    const userId = getUserId(request);
+    const user = await requireApiUser();
+    if (user instanceof NextResponse) return user;
 
     if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json({ error: "Invalid id." }, { status: 400 });
@@ -133,7 +132,7 @@ export async function DELETE(request: Request) {
 
     await execute("DELETE FROM liked_songs WHERE id = $1 AND user_id = $2", [
       id,
-      userId,
+      user.id,
     ]);
     return NextResponse.json({ ok: true });
   } catch (error) {

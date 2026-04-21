@@ -1,8 +1,5 @@
-import { Pool, type QueryResultRow } from "pg";
-
-declare global {
-  var __moodfyrPool: Pool | undefined;
-}
+import "server-only";
+import { neon, type QueryResultRow } from "@neondatabase/serverless";
 
 const connectionString =
   process.env.DATABASE_URL ??
@@ -13,29 +10,15 @@ if (!connectionString) {
   throw new Error("Missing DATABASE_URL / POSTGRES_URL for database access.");
 }
 
-const isSslDisabled =
-  process.env.POSTGRES_URL_NO_SSL === connectionString ||
-  connectionString.includes("sslmode=disable");
-
-const pool =
-  global.__moodfyrPool ??
-  new Pool({
-    connectionString,
-    ssl: isSslDisabled ? undefined : { rejectUnauthorized: false },
-  });
-
-if (process.env.NODE_ENV !== "production") {
-  global.__moodfyrPool = pool;
-}
+const sql = neon(connectionString);
 
 export async function query<T extends QueryResultRow = QueryResultRow>(
   text: string,
   params: unknown[] = [],
 ): Promise<T[]> {
-  const result = await pool.query<T>(text, params);
-  return result.rows;
+  return (await sql.query(text, params)) as T[];
 }
 
 export async function execute(text: string, params: unknown[] = []) {
-  await pool.query(text, params);
+  await sql.query(text, params);
 }

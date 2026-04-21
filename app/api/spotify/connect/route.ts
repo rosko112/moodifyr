@@ -1,32 +1,24 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { getDefaultUserId } from "@/lib/dashboard-data";
+import { getCurrentSessionUser } from "@/lib/auth";
+import { getSpotifyRedirectUri } from "@/lib/spotify";
 
 const SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize";
 export const runtime = "nodejs";
 
-function getUserId(req: Request) {
-  const url = new URL(req.url);
-  const fromQuery = Number(url.searchParams.get("userId"));
-  if (Number.isInteger(fromQuery) && fromQuery > 0) return fromQuery;
-
-  const fromHeader = Number(req.headers.get("x-user-id"));
-  if (Number.isInteger(fromHeader) && fromHeader > 0) return fromHeader;
-
-  return getDefaultUserId();
-}
-
 export async function GET(request: Request) {
+  const user = await getCurrentSessionUser();
+  if (!user) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   if (!clientId) {
     return NextResponse.redirect(new URL("/dashboard/spotify-sync?error=config", request.url));
   }
 
-  const userId = getUserId(request);
   const state = randomUUID();
-  const redirectUri =
-    process.env.SPOTIFY_REDIRECT_URI ??
-    `${new URL(request.url).origin}/api/spotify/callback`;
+  const redirectUri = getSpotifyRedirectUri(request.url);
 
   const authUrl = new URL(SPOTIFY_AUTH_URL);
   authUrl.searchParams.set("client_id", clientId);
@@ -53,7 +45,7 @@ export async function GET(request: Request) {
     path: "/",
     maxAge: 60 * 10,
   });
-  response.cookies.set("moodfyr_user_id", String(userId), {
+  response.cookies.set("moodfyr_user_id", String(user.id), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

@@ -9,7 +9,7 @@ export async function POST() {
     console.error("Logout route failed:", error);
 
     return NextResponse.json(
-      { error: "Odjava ni uspela." },
+      { error: "Logout failed." },
       { status: 500 },
     );
   }

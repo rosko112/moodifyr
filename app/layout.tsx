@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "modifyr | Mood-based Spotify recommendations",
   description:
-    "Poveži Spotify, opiši svoje razpoloženje in odkrij pesmi, ki se ujemajo s tvojim trenutnim vibeom.",
+    "Connect Spotify, describe your mood, and discover songs that match your current vibe.",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="sl"
+      lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>

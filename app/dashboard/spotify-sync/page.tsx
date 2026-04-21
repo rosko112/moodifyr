@@ -1,5 +1,6 @@
-import { getDefaultUserId, getSpotifySyncData } from "@/lib/dashboard-data";
+import { getSpotifySyncData } from "@/lib/dashboard-data";
 import Link from "next/link";
+import { requireSessionUser } from "@/lib/auth";
 
 function formatTime(value: string | null) {
   if (!value) return "none";
@@ -34,7 +35,8 @@ export default async function SpotifySyncPage({
   const params = await searchParams;
   const errorCode = Array.isArray(params.error) ? params.error[0] : params.error ?? null;
   const errorMessage = mapErrorMessage(errorCode);
-  const sync = await getSpotifySyncData(getDefaultUserId());
+  const user = await requireSessionUser();
+  const sync = await getSpotifySyncData(user.id);
   const syncItems = [
     { label: "Account", value: sync.account ?? "unknown" },
     {

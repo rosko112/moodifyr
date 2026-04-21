@@ -25,7 +25,7 @@ export async function GET() {
       {
         configured: true,
         user: null,
-        error: "Branje seje iz baze ni uspelo.",
+        error: "Could not read the current session from the database.",
       },
       { status: 500 },
     );
