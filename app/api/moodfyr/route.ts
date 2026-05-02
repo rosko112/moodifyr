@@ -19,9 +19,6 @@ type TrackResult = {
   previewUrl: string | null;
 };
 
-<<<<<<< Updated upstream
-const GEMINI_MODEL = "gemini-2.0-flash";
-=======
 type SpotifyConnectionRow = {
   access_token: string;
   refresh_token: string | null;
@@ -31,7 +28,6 @@ type SpotifyConnectionRow = {
 };
 
 const GEMINI_MODEL = "gemini-2.5-flash-lite";
->>>>>>> Stashed changes
 
 function readRequiredEnv(keys: string[]) {
   for (const key of keys) {
