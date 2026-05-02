@@ -80,6 +80,7 @@ export default async function SpotifySyncPage({
       </article>
 
       <article className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+<<<<<<< Updated upstream
         <h2 className="text-xl font-semibold">Connect Spotify</h2>
         <div className="mt-4 space-y-3">
           <p className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/80">
@@ -93,6 +94,46 @@ export default async function SpotifySyncPage({
           >
             {sync.spotifyConnected ? "Reconnect Spotify" : "Connect Spotify"}
           </Link>
+=======
+<<<<<<< Updated upstream
+        <h2 className="text-xl font-semibold">Sync controls</h2>
+        <div className="mt-4 grid gap-3">
+          <button
+            type="button"
+            className="rounded-full bg-[#1db954] px-6 py-3 text-sm font-bold text-[#03220f] transition hover:bg-[#25cf61]"
+          >
+            Start full sync
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10"
+          >
+            Refresh liked songs
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10"
+          >
+            Reconnect Spotify
+          </button>
+=======
+        <h2 className="text-xl font-semibold">Connect Spotify</h2>
+        <div className="mt-4 space-y-3">
+          <p className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/80">
+            {sync.spotifyConnected
+              ? `Connected as ${sync.spotifyAccount ?? "spotify user"}. Last update: ${formatTime(sync.spotifyConnectedAt)}.`
+              : "No Spotify account connected yet."}
+          </p>
+          {!sync.spotifyConnected ? (
+            <a
+              href="/api/spotify/connect"
+              className="inline-flex w-full items-center justify-center rounded-2xl border-2 border-emerald-200/40 bg-[#1ed760] px-8 py-5 text-base font-black tracking-wide text-[#03220f] shadow-[0_18px_45px_rgba(30,215,96,0.45)] transition hover:scale-[1.01] hover:bg-[#25e56b] hover:shadow-[0_24px_60px_rgba(30,215,96,0.55)] sm:w-auto sm:rounded-full"
+            >
+              Connect Spotify
+            </a>
+          ) : null}
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
         </div>
       </article>
     </div>

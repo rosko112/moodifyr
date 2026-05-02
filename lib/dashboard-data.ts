@@ -16,6 +16,15 @@ type HistoryRow = {
   recommended_tracks: unknown;
   created_at: string;
 };
+<<<<<<< Updated upstream
+=======
+type RecommendedTrack = {
+  title?: string;
+  artist?: string;
+  imageUrl?: string | null;
+  spotifyUrl?: string | null;
+};
+>>>>>>> Stashed changes
 type ExistsRow = { exists: string | null };
 
 export function getDefaultUserId() {
@@ -141,12 +150,44 @@ export async function getDashboardHistory(userId: number) {
     const tracks = Array.isArray(row.recommended_tracks)
       ? row.recommended_tracks
       : [];
+<<<<<<< Updated upstream
+=======
+    const normalizedTracks = tracks
+      .map((track) => {
+        if (!track || typeof track !== "object") {
+          return null;
+        }
+        const candidate = track as RecommendedTrack;
+        if (!candidate.title && !candidate.artist) {
+          return null;
+        }
+        return {
+          title: candidate.title ?? "Unknown",
+          artist: candidate.artist ?? "Unknown",
+          imageUrl: candidate.imageUrl ?? null,
+          spotifyUrl: candidate.spotifyUrl ?? null,
+        };
+      })
+      .filter(
+        (track): track is {
+          title: string;
+          artist: string;
+          imageUrl: string | null;
+          spotifyUrl: string | null;
+        } => Boolean(track),
+      );
+>>>>>>> Stashed changes
     return {
       id: String(row.id),
       moodText: row.mood_text,
       moodKeyword: row.mood_keyword,
       createdAt: row.created_at,
+<<<<<<< Updated upstream
       tracksCount: tracks.length,
+=======
+      tracksCount: normalizedTracks.length,
+      tracks: normalizedTracks,
+>>>>>>> Stashed changes
     };
   });
 }
