@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth-form";
 import { isDatabaseConfigured } from "@/lib/neon";
 

@@ -11,11 +11,30 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, username, password } = (await request.json()) as {
-      email?: string;
-      username?: string;
-      password?: string;
-    };
+    const contentType = request.headers.get("content-type") ?? "";
+    const isFormSubmit =
+      contentType.includes("application/x-www-form-urlencoded") ||
+      contentType.includes("multipart/form-data");
+
+    let email = "";
+    let username = "";
+    let password = "";
+
+    if (isFormSubmit) {
+      const formData = await request.formData();
+      email = String(formData.get("email") ?? "");
+      username = String(formData.get("username") ?? "");
+      password = String(formData.get("password") ?? "");
+    } else {
+      const body = (await request.json()) as {
+        email?: string;
+        username?: string;
+        password?: string;
+      };
+      email = body.email ?? "";
+      username = body.username ?? "";
+      password = body.password ?? "";
+    }
 
     if (!email || !username || !password) {
       return NextResponse.json(
@@ -38,11 +57,27 @@ export async function POST(request: Request) {
 
     const result = await createUser(email, username, password);
 
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const host = forwardedHost ?? request.headers.get("host");
+    const forwardedProto = request.headers.get("x-forwarded-proto");
+    const proto = forwardedProto ?? "https";
+    const baseUrl = host ? `${proto}://${host}` : new URL(request.url).origin;
+
     if (result.error || !result.user) {
+      if (isFormSubmit) {
+        return NextResponse.redirect(
+          new URL("/register?error=validation", baseUrl),
+        );
+      }
+
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
     await createSession(Number(result.user.id));
+
+    if (isFormSubmit) {
+      return NextResponse.redirect(new URL("/dashboard", baseUrl));
+    }
 
     return NextResponse.json({
       user: {
@@ -53,6 +88,22 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Register route failed:", error);
+
+    const contentType = request.headers.get("content-type") ?? "";
+    const isFormSubmit =
+      contentType.includes("application/x-www-form-urlencoded") ||
+      contentType.includes("multipart/form-data");
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const host = forwardedHost ?? request.headers.get("host");
+    const forwardedProto = request.headers.get("x-forwarded-proto");
+    const proto = forwardedProto ?? "https";
+    const baseUrl = host ? `${proto}://${host}` : new URL(request.url).origin;
+
+    if (isFormSubmit) {
+      return NextResponse.redirect(
+        new URL("/register?error=server", baseUrl),
+      );
+    }
 
     return NextResponse.json(
       { error: "Database request failed. Check DATABASE_URL and Neon access." },
