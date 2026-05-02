@@ -19,7 +19,12 @@ type SpotifyMeResponse = {
 export const runtime = "nodejs";
 
 function redirectToSync(request: Request, queryParam: string) {
-  return NextResponse.redirect(new URL(`/dashboard/spotify-sync?${queryParam}`, request.url));
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = forwardedHost ?? request.headers.get("host");
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const proto = forwardedProto ?? "https";
+  const baseUrl = host ? `${proto}://${host}` : new URL(request.url).origin;
+  return NextResponse.redirect(new URL(`/dashboard/spotify-sync?${queryParam}`, baseUrl));
 }
 
 export async function GET(request: Request) {
@@ -48,7 +53,11 @@ export async function GET(request: Request) {
 
     const clientId = process.env.SPOTIFY_CLIENT_ID;
     const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-    const redirectUri = getSpotifyRedirectUri(request.url);
+    const redirectUri = getSpotifyRedirectUri({
+      requestUrl: request.url,
+      forwardedHost: request.headers.get("x-forwarded-host"),
+      forwardedProto: request.headers.get("x-forwarded-proto"),
+    });
 
     if (!clientId || !clientSecret) {
       return redirectToSync(request, "error=config");

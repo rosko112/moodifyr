@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { ensureHistorySchema } from "@/lib/dashboard-data";
+import { ensureHistorySchema, ensureSpotifyConnectionsSchema } from "@/lib/dashboard-data";
 import { getCurrentSessionUser } from "@/lib/auth";
 
 type SpotifyTrack = {
   name: string;
   artists: { name: string }[];
+  album?: { images?: Array<{ url?: string | null }> };
   external_urls?: { spotify?: string };
   preview_url?: string | null;
 };
@@ -13,11 +14,24 @@ type SpotifyTrack = {
 type TrackResult = {
   title: string;
   artist: string;
+  imageUrl: string | null;
   spotifyUrl: string | null;
   previewUrl: string | null;
 };
 
+<<<<<<< Updated upstream
 const GEMINI_MODEL = "gemini-2.0-flash";
+=======
+type SpotifyConnectionRow = {
+  access_token: string;
+  refresh_token: string | null;
+  token_type: string | null;
+  scope: string | null;
+  expires_at: string | null;
+};
+
+const GEMINI_MODEL = "gemini-2.5-flash-lite";
+>>>>>>> Stashed changes
 
 function readRequiredEnv(keys: string[]) {
   for (const key of keys) {
@@ -93,7 +107,13 @@ async function extractMoodKeyword(inputText: string) {
   return sanitizeMood(rawText);
 }
 
-async function getSpotifyToken() {
+function isTokenExpired(expiresAt: string | null) {
+  if (!expiresAt) return true;
+  const expiresAtMs = new Date(expiresAt).getTime();
+  return Number.isNaN(expiresAtMs) || expiresAtMs <= Date.now() + 60_000;
+}
+
+async function refreshSpotifyToken(userId: number, refreshToken: string) {
   const clientId = readRequiredEnv([
     "SPOTIFY_CLIENT_ID",
     "NEXT_PUBLIC_SPOTIFY_CLIENT_ID",
@@ -108,18 +128,77 @@ async function getSpotifyToken() {
       Authorization: `Basic ${basic}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: new URLSearchParams({ grant_type: "client_credentials" }),
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }),
   });
 
   if (!tokenResponse.ok) {
     const body = await tokenResponse.text();
     throw new Error(
-      `Spotify token request failed (${tokenResponse.status}): ${body}`,
+      `Spotify refresh failed (${tokenResponse.status}): ${body}`,
     );
   }
 
-  const tokenData = (await tokenResponse.json()) as { access_token: string };
+  const tokenData = (await tokenResponse.json()) as {
+    access_token: string;
+    refresh_token?: string;
+    token_type?: string;
+    scope?: string;
+    expires_in?: number;
+  };
+
+  const expiresAt = new Date(
+    Date.now() + (tokenData.expires_in ?? 3600) * 1000,
+  ).toISOString();
+
+  await query(
+    `UPDATE spotify_connections
+     SET access_token = $1,
+         refresh_token = $2,
+         token_type = $3,
+         scope = $4,
+         expires_at = $5,
+         updated_at = now()
+     WHERE user_id = $6`,
+    [
+      tokenData.access_token,
+      tokenData.refresh_token ?? refreshToken,
+      tokenData.token_type ?? null,
+      tokenData.scope ?? null,
+      expiresAt,
+      userId,
+    ],
+  );
+
   return tokenData.access_token;
+}
+
+async function getUserSpotifyAccessToken(userId: number) {
+  await ensureSpotifyConnectionsSchema();
+  const rows = await query<SpotifyConnectionRow>(
+    `SELECT access_token, refresh_token, token_type, scope, expires_at
+     FROM spotify_connections
+     WHERE user_id = $1
+     LIMIT 1`,
+    [userId],
+  );
+
+  const connection = rows[0];
+  if (!connection?.access_token) {
+    throw new Error("Spotify is not connected. Connect Spotify first.");
+  }
+
+  if (!isTokenExpired(connection.expires_at)) {
+    return connection.access_token;
+  }
+
+  if (!connection.refresh_token) {
+    throw new Error("Spotify session expired. Reconnect Spotify.");
+  }
+
+  return refreshSpotifyToken(userId, connection.refresh_token);
 }
 
 async function searchPlaylists(accessToken: string, keyword: string) {
@@ -143,7 +222,7 @@ async function searchPlaylists(accessToken: string, keyword: string) {
     playlists?: { items?: Array<{ id?: string | null }> };
   };
   return (data.playlists?.items ?? [])
-    .map((item) => item.id)
+    .map((item) => item?.id ?? null)
     .filter((id): id is string => Boolean(id));
 }
 
@@ -154,7 +233,7 @@ async function getPlaylistTracks(accessToken: string, playlistId: string) {
   url.searchParams.set("limit", "50");
   url.searchParams.set(
     "fields",
-    "items(track(name,artists(name),external_urls,preview_url))",
+    "items(track(name,artists(name),album(images(url)),external_urls,preview_url))",
   );
   url.searchParams.set("market", "US");
 
@@ -175,9 +254,11 @@ async function getPlaylistTracks(accessToken: string, playlistId: string) {
 }
 
 function toTrackResult(track: SpotifyTrack): TrackResult {
+  const imageUrl = track.album?.images?.find((image) => image?.url)?.url ?? null;
   return {
     title: track.name,
     artist: track.artists.map((artist) => artist.name).join(", "),
+    imageUrl,
     spotifyUrl: track.external_urls?.spotify ?? null,
     previewUrl: track.preview_url ?? null,
   };
@@ -200,7 +281,8 @@ async function saveMoodHistory(
 export async function POST(request: Request) {
   try {
     const user = await getCurrentSessionUser();
-    if (!user) {
+    const userId = user?.id ?? null;
+    if (!user || !Number.isInteger(userId)) {
       return NextResponse.json(
         { error: "Authentication required." },
         { status: 401 },
@@ -218,11 +300,11 @@ export async function POST(request: Request) {
     }
 
     const keyword = await extractMoodKeyword(text);
-    const spotifyToken = await getSpotifyToken();
+    const spotifyToken = await getUserSpotifyAccessToken(userId);
     const playlistIds = await searchPlaylists(spotifyToken, keyword);
 
     if (!playlistIds.length) {
-      await saveMoodHistory(user.id, text, keyword, []);
+      await saveMoodHistory(userId, text, keyword, []);
       return NextResponse.json({ keyword, tracks: [] });
     }
 
@@ -245,7 +327,7 @@ export async function POST(request: Request) {
       .slice(0, 6)
       .map(toTrackResult);
 
-    await saveMoodHistory(user.id, text, keyword, randomSix);
+    await saveMoodHistory(userId, text, keyword, randomSix);
 
     return NextResponse.json({
       keyword,

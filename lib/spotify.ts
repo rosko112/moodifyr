@@ -9,19 +9,27 @@ function isLocalOrigin(origin: string) {
   }
 }
 
-export function getSpotifyRedirectUri(requestUrl: string) {
-  const requestOrigin = new URL(requestUrl).origin;
+type RedirectOriginOptions = {
+  requestUrl: string;
+  forwardedHost?: string | null;
+  forwardedProto?: string | null;
+};
+
+function getRequestOrigin({ requestUrl, forwardedHost, forwardedProto }: RedirectOriginOptions) {
+  const originUrl = new URL(requestUrl);
+  if (forwardedHost) {
+    const proto = forwardedProto ?? "https";
+    return `${proto}://${forwardedHost}`;
+  }
+
+  return originUrl.origin;
+}
+
+export function getSpotifyRedirectUri(options: RedirectOriginOptions) {
+  const requestOrigin = getRequestOrigin(options);
   const configuredRedirectUri = process.env.SPOTIFY_REDIRECT_URI;
 
   if (configuredRedirectUri) {
-    const configuredOrigin = new URL(configuredRedirectUri).origin;
-
-    // In local development, prefer the current app origin so OAuth returns
-    // to the same host that created the state cookies.
-    if (isLocalOrigin(requestOrigin) && !isLocalOrigin(configuredOrigin)) {
-      return `${requestOrigin}/api/spotify/callback`;
-    }
-
     return configuredRedirectUri;
   }
 
