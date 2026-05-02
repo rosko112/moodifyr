@@ -2,25 +2,39 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 type AuthFormProps = {
   mode: "login" | "register";
   isDatabaseConfigured: boolean;
+  initialError?: string;
 };
 
-export function AuthForm({ mode, isDatabaseConfigured }: AuthFormProps) {
+export function AuthForm({ mode, isDatabaseConfigured, initialError }: AuthFormProps) {
   const router = useRouter();
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
+
+    if (!isDatabaseConfigured) {
+      setError("Database connection is not configured yet.");
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
     const identifier = String(
       formData.get(mode === "register" ? "email" : "identifier") ?? "",
     );
     const username = String(formData.get("username") ?? "");
     const password = String(formData.get("password") ?? "");
 
+    const startedAt = Date.now();
     setIsSubmitting(true);
     setError("");
 
@@ -64,6 +78,10 @@ export function AuthForm({ mode, isDatabaseConfigured }: AuthFormProps) {
     } catch {
       setError("Povezava s streznikom ni uspela.");
     } finally {
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < 350) {
+        await new Promise((resolve) => setTimeout(resolve, 350 - elapsed));
+      }
       setIsSubmitting(false);
     }
   }
@@ -90,7 +108,12 @@ export function AuthForm({ mode, isDatabaseConfigured }: AuthFormProps) {
         ) : null}
       </div>
 
-      <form action={handleSubmit} className="grid gap-4">
+      <form
+        onSubmit={handleSubmit}
+        action={mode === "register" ? "/api/auth/register" : "/api/auth/login"}
+        method="post"
+        className="grid gap-4"
+      >
         {mode === "register" ? (
           <label className="grid gap-2 text-sm font-medium text-slate-700">
             Username
@@ -147,6 +170,14 @@ export function AuthForm({ mode, isDatabaseConfigured }: AuthFormProps) {
               ? "Registriraj se"
               : "Prijavi se"}
         </button>
+
+        {isSubmitting ? (
+          <p className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white/70">
+            {mode === "register"
+              ? "Creating your account..."
+              : "Signing you in..."}
+          </p>
+        ) : null}
       </form>
 
       <div className="mt-6 text-sm text-slate-600">
