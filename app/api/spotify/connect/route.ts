@@ -7,18 +7,30 @@ const SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize";
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = forwardedHost ?? request.headers.get("host");
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const proto = forwardedProto ?? "https";
+  const baseUrl = host ? `${proto}://${host}` : new URL(request.url).origin;
+
   const user = await getCurrentSessionUser();
   if (!user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/login", baseUrl));
   }
 
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   if (!clientId) {
-    return NextResponse.redirect(new URL("/dashboard/spotify-sync?error=config", request.url));
+    return NextResponse.redirect(
+      new URL("/dashboard/spotify-sync?error=config", baseUrl),
+    );
   }
 
   const state = randomUUID();
-  const redirectUri = getSpotifyRedirectUri(request.url);
+  const redirectUri = getSpotifyRedirectUri({
+    requestUrl: request.url,
+    forwardedHost: request.headers.get("x-forwarded-host"),
+    forwardedProto: request.headers.get("x-forwarded-proto"),
+  });
 
   const authUrl = new URL(SPOTIFY_AUTH_URL);
   authUrl.searchParams.set("client_id", clientId);

@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { ensureHistorySchema } from "@/lib/dashboard-data";
+import { ensureHistorySchema, ensureSpotifyConnectionsSchema } from "@/lib/dashboard-data";
 import { getCurrentSessionUser } from "@/lib/auth";
 
 type SpotifyTrack = {
   name: string;
   artists: { name: string }[];
+  album?: { images?: Array<{ url?: string | null }> };
   external_urls?: { spotify?: string };
   preview_url?: string | null;
 };
@@ -13,247 +14,262 @@ type SpotifyTrack = {
 type TrackResult = {
   title: string;
   artist: string;
+  imageUrl: string | null;
   spotifyUrl: string | null;
   previewUrl: string | null;
 };
 
-const GEMINI_MODEL = "gemini-3-flash-preview";
+type SpotifyConnectionRow = {
+  access_token: string;
+  refresh_token: string | null;
+  token_type: string | null;
+  scope: string | null;
+  expires_at: string | null;
+};
+
+type SpotifyPlaylistItem = {
+  id?: string;
+};
+
+type SpotifySearchResponse = {
+  playlists?: {
+    items?: SpotifyPlaylistItem[];
+  };
+};
+
+type SpotifyTracksResponse = {
+  items?: {
+    track?: SpotifyTrack | null;
+  }[];
+};
+
+const GEMINI_MODEL = "gemini-2.5-flash-lite";
+
+/* ---------------- ENV ---------------- */
 
 function readRequiredEnv(keys: string[]) {
   for (const key of keys) {
     const value = process.env[key];
     if (value) return value;
   }
-  throw new Error(`Missing required env. Tried: ${keys.join(", ")}`);
+  throw new Error(`Missing env vars: ${keys.join(", ")}`);
 }
 
+/* ---------------- MOOD ---------------- */
+
 function sanitizeMood(text: string) {
-  const firstWord = text
+  const word = text
     .trim()
     .toLowerCase()
     .replace(/[^a-z\s-]/g, " ")
     .split(/\s+/)
     .find(Boolean);
 
-  return firstWord && firstWord.length >= 2 ? firstWord : "calm";
+  return word && word.length >= 2 ? word : "calm";
 }
+
+/* ---------------- UTIL ---------------- */
 
 function shuffle<T>(arr: T[]) {
   const copy = [...arr];
-  for (let i = copy.length - 1; i > 0; i -= 1) {
+  for (let i = copy.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy;
 }
 
+/* ---------------- GEMINI ---------------- */
+
 async function extractMoodKeyword(inputText: string) {
-  const geminiApiKey = readRequiredEnv([
+  const apiKey = readRequiredEnv([
     "GEMINI_API_KEY",
     "GOOGLE_API_KEY",
     "GOOGLE_GENERATIVE_AI_API_KEY",
   ]);
 
-  const prompt = [
-    "You are a mood classifier.",
-    "Extract exactly one English mood word from the user text.",
-    "Examples: happy, sad, angry, calm, focused, anxious, nostalgic.",
-    "Return only one lowercase word and nothing else.",
-    `User text: ${inputText}`,
-  ].join("\n");
+  const prompt = `
+Extract ONE mood word.
+Return only lowercase word.
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiApiKey}`,
+Text: ${inputText}
+`;
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
     {
       method: "POST",
-      cache: "no-store",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 8,
-        },
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 10 },
       }),
-    },
+    }
   );
 
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Gemini request failed (${response.status}): ${body}`);
-  }
+  const data = await res.json();
 
-  const data = (await response.json()) as {
-    candidates?: Array<{
-      content?: { parts?: Array<{ text?: string }> };
-    }>;
-  };
+  const text =
+    data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "calm";
 
-  const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "calm";
-  return sanitizeMood(rawText);
+  return sanitizeMood(text);
 }
 
-async function getSpotifyToken() {
-  const clientId = readRequiredEnv([
-    "SPOTIFY_CLIENT_ID",
-    "NEXT_PUBLIC_SPOTIFY_CLIENT_ID",
-  ]);
-  const clientSecret = readRequiredEnv(["SPOTIFY_CLIENT_SECRET"]);
-  const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+/* ---------------- AUTH HELPERS ---------------- */
 
-  const tokenResponse = await fetch("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    cache: "no-store",
-    headers: {
-      Authorization: `Basic ${basic}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ grant_type: "client_credentials" }),
-  });
-
-  if (!tokenResponse.ok) {
-    const body = await tokenResponse.text();
-    throw new Error(
-      `Spotify token request failed (${tokenResponse.status}): ${body}`,
-    );
-  }
-
-  const tokenData = (await tokenResponse.json()) as { access_token: string };
-  return tokenData.access_token;
+function parseUserId(user: unknown): number | null {
+  const id = parseInt(String((user as any)?.id), 10);
+  return Number.isNaN(id) ? null : id;
 }
 
-async function searchPlaylists(accessToken: string, keyword: string) {
+/* ---------------- SPOTIFY ---------------- */
+
+async function getUserSpotifyAccessToken(userId: number) {
+  await ensureSpotifyConnectionsSchema();
+
+  const rows = await query<SpotifyConnectionRow>(
+    `SELECT * FROM spotify_connections WHERE user_id = $1 LIMIT 1`,
+    [userId]
+  );
+
+  const conn = rows[0];
+
+  if (!conn?.access_token) {
+    throw new Error("Spotify not connected.");
+  }
+
+  return conn.access_token;
+}
+
+/* ---------------- PLAYLIST SEARCH ---------------- */
+
+async function searchPlaylists(token: string, keyword: string): Promise<string[]> {
   const url = new URL("https://api.spotify.com/v1/search");
   url.searchParams.set("q", keyword);
   url.searchParams.set("type", "playlist");
-  url.searchParams.set("limit", "8");
-  url.searchParams.set("market", "US");
+  url.searchParams.set("limit", "6");
 
-  const response = await fetch(url, {
-    cache: "no-store",
-    headers: { Authorization: `Bearer ${accessToken}` },
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
   });
 
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Spotify search failed (${response.status}): ${body}`);
-  }
+  if (!res.ok) return [];
 
-  const data = (await response.json()) as {
-    playlists?: { items?: Array<{ id?: string | null }> };
-  };
+  const data = (await res.json()) as SpotifySearchResponse;
+
   return (data.playlists?.items ?? [])
-    .map((item) => item.id)
-    .filter((id): id is string => Boolean(id));
+    .map((p) => p.id)
+    .filter((id): id is string => typeof id === "string");
 }
 
-async function getPlaylistTracks(accessToken: string, playlistId: string) {
-  const url = new URL(
-    `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
-  );
-  url.searchParams.set("limit", "50");
-  url.searchParams.set(
-    "fields",
-    "items(track(name,artists(name),external_urls,preview_url))",
-  );
-  url.searchParams.set("market", "US");
+/* ---------------- TRACKS ---------------- */
 
-  const response = await fetch(url, {
-    cache: "no-store",
-    headers: { Authorization: `Bearer ${accessToken}` },
+async function getPlaylistTracks(token: string, id: string): Promise<SpotifyTrack[]> {
+  const url = new URL(`https://api.spotify.com/v1/playlists/${id}/tracks`);
+  url.searchParams.set("limit", "50");
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
   });
 
-  if (!response.ok) return [];
+  if (!res.ok) return [];
 
-  const data = (await response.json()) as {
-    items?: Array<{ track?: SpotifyTrack | null }>;
-  };
+  const data = (await res.json()) as SpotifyTracksResponse;
 
   return (data.items ?? [])
-    .map((item) => item.track)
-    .filter((track): track is SpotifyTrack => Boolean(track?.name));
+    .map((i) => i.track)
+    .filter((t): t is SpotifyTrack => Boolean(t?.name));
 }
 
-function toTrackResult(track: SpotifyTrack): TrackResult {
+/* ---------------- MAP ---------------- */
+
+function mapTrack(t: SpotifyTrack): TrackResult {
   return {
-    title: track.name,
-    artist: track.artists.map((artist) => artist.name).join(", "),
-    spotifyUrl: track.external_urls?.spotify ?? null,
-    previewUrl: track.preview_url ?? null,
+    title: t.name,
+    artist: t.artists.map((a) => a.name).join(", "),
+    imageUrl: t.album?.images?.[0]?.url ?? null,
+    spotifyUrl: t.external_urls?.spotify ?? null,
+    previewUrl: t.preview_url ?? null,
   };
 }
 
-async function saveMoodHistory(
+/* ---------------- HISTORY ---------------- */
+
+async function saveHistory(
   userId: number,
   moodText: string,
-  moodKeyword: string,
-  tracks: TrackResult[],
+  keyword: string,
+  tracks: TrackResult[]
 ) {
   await ensureHistorySchema();
+
   await query(
     `INSERT INTO user_history (user_id, mood_text, mood_keyword, recommended_tracks)
      VALUES ($1, $2, $3, $4::jsonb)`,
-    [userId, moodText, moodKeyword, JSON.stringify(tracks)],
+    [userId, moodText, keyword, JSON.stringify(tracks)]
   );
 }
 
-export async function POST(request: Request) {
+/* ---------------- MAIN ROUTE ---------------- */
+
+export async function POST(req: Request) {
   try {
     const user = await getCurrentSessionUser();
+
     if (!user) {
-      return NextResponse.json(
-        { error: "Authentication required." },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = (await request.json()) as { text?: string };
+    const userId = parseUserId(user);
+
+    if (!userId) {
+      return NextResponse.json({ error: "Invalid user id" }, { status: 400 });
+    }
+
+    const body = (await req.json()) as { text?: string };
     const text = body.text?.trim();
 
-    if (!text || text.length < 2) {
-      return NextResponse.json(
-        { error: "Mood text is required." },
-        { status: 400 },
-      );
+    if (!text) {
+      return NextResponse.json({ error: "Missing mood text" }, { status: 400 });
     }
 
     const keyword = await extractMoodKeyword(text);
-    const spotifyToken = await getSpotifyToken();
-    const playlistIds = await searchPlaylists(spotifyToken, keyword);
 
-    if (!playlistIds.length) {
-      await saveMoodHistory(user.id, text, keyword, []);
+    const token = await getUserSpotifyAccessToken(userId);
+
+    const playlists = await searchPlaylists(token, keyword);
+
+    if (!playlists.length) {
+      await saveHistory(userId, text, keyword, []);
       return NextResponse.json({ keyword, tracks: [] });
     }
 
-    const shuffledPlaylists = shuffle(playlistIds).slice(0, 4);
-    const allTracks: SpotifyTrack[] = [];
+    const selected = shuffle(playlists).slice(0, 3);
 
-    for (const playlistId of shuffledPlaylists) {
-      const tracks = await getPlaylistTracks(spotifyToken, playlistId);
-      allTracks.push(...tracks);
-      if (allTracks.length >= 60) break;
+    const tracks: SpotifyTrack[] = [];
+
+    for (const id of selected) {
+      const playlistTracks = await getPlaylistTracks(token, id);
+      tracks.push(...playlistTracks);
     }
 
     const unique = new Map<string, SpotifyTrack>();
-    for (const track of allTracks) {
-      const key = `${track.name}::${track.artists.map((a) => a.name).join(",")}`;
-      if (!unique.has(key)) unique.set(key, track);
+
+    for (const t of tracks) {
+      unique.set(`${t.name}-${t.artists[0]?.name}`, t);
     }
 
-    const randomSix = shuffle(Array.from(unique.values()))
+    const result = shuffle([...unique.values()])
       .slice(0, 6)
-      .map(toTrackResult);
+      .map(mapTrack);
 
-    await saveMoodHistory(user.id, text, keyword, randomSix);
+    await saveHistory(userId, text, keyword, result);
 
-    return NextResponse.json({
-      keyword,
-      tracks: randomSix,
-    });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unexpected server error.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ keyword, tracks: result });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 }
+    );
   }
 }
