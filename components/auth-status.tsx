@@ -50,27 +50,27 @@ export function AuthStatus() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_60px_rgba(15,23,42,0.06)]">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-600">
-          Dostop do funkcionalnosti
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">
+          Feature access
         </p>
-        <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-950">
+        <h2 className="mt-3 text-2xl font-bold tracking-tight text-white">
           {!hasLoaded
-            ? "Preverjam povezavo"
+            ? "Checking connection"
             : user
-              ? "Pripravljen za uporabo"
+              ? "Ready to use"
               : isDatabaseConfigured
-                ? "Za uporabo se prijavi"
-                : "Nastavi Neon povezavo"}
+                ? "Sign in to continue"
+                : "Set up your Neon connection"}
         </h2>
-        <p className="mt-3 text-sm leading-6 text-slate-600">
+        <p className="mt-3 text-sm leading-6 text-white/68">
           {!hasLoaded
-            ? "Preverjam, ali je baza pripravljena in ali ze obstaja aktivna seja."
+            ? "Checking whether the database is ready and whether an active session already exists."
             : user
               ? `Signed in as @${user.username} (${user.email}). Dashboard, Spotify sync, and mood features are unlocked.`
               : isDatabaseConfigured
-                ? "Naslovnica je javna, za povezavo s Spotifyjem in uporabo mood priporocil pa potrebujes racun."
-                : "Dodaj DATABASE_URL v .env.local ali .env, potem bo login/register takoj deloval."}
+                ? "The landing page is public, but Spotify connection and mood recommendations require an account."
+                : "Add DATABASE_URL to .env.local or .env and login/register will work immediately."}
         </p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -78,54 +78,54 @@ export function AuthStatus() {
             <>
               <Link
                 href="/dashboard"
-                className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                className="inline-flex items-center justify-center rounded-full border-2 border-emerald-200/40 bg-[#1ed760] px-5 py-3 text-sm font-black tracking-wide text-[#03220f] shadow-[0_12px_30px_rgba(30,215,96,0.35)] transition hover:bg-[#25e56b]"
               >
                 Continue to dashboard
               </Link>
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-950 hover:text-slate-950"
+                className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white/90 transition hover:border-white/45 hover:bg-white/10"
               >
-                Odjava
+                Logout
               </button>
             </>
           ) : hasLoaded && isDatabaseConfigured ? (
             <>
               <Link
                 href="/login"
-                className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                className="inline-flex items-center justify-center rounded-full border-2 border-emerald-200/40 bg-[#1ed760] px-5 py-3 text-sm font-black tracking-wide text-[#03220f] shadow-[0_12px_30px_rgba(30,215,96,0.35)] transition hover:bg-[#25e56b]"
               >
                 Login
               </Link>
               <Link
                 href="/register"
-                className="rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-950 hover:text-slate-950"
+                className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white/90 transition hover:border-white/45 hover:bg-white/10"
               >
                 Register
               </Link>
             </>
           ) : hasLoaded ? (
-            <div className="rounded-full bg-amber-50 px-5 py-3 text-sm font-semibold text-amber-800">
-              Caka na tvoje Neon podatke
+            <div className="rounded-full bg-amber-300/14 px-5 py-3 text-sm font-semibold text-amber-100">
+              Waiting for your Neon credentials
             </div>
           ) : (
-            <div className="rounded-full bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-600">
-              Nalagam stanje prijave
+            <div className="rounded-full bg-white/8 px-5 py-3 text-sm font-semibold text-white/70">
+              Loading sign-in state
             </div>
           )}
         </div>
       </div>
 
-      <div className="rounded-[2rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.14)]">
+      <div className="rounded-3xl border border-white/10 bg-black/20 p-6 text-white backdrop-blur">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">
-          Kaj se odklene po prijavi
+          What unlocks after login
         </p>
         <div className="mt-5 grid gap-3">
           {[
-            ["Spotify povezava", "sinhronizacija profila in poslusalnih navad"],
-            ["Vnos pocutja", "opis razpolozenja v naravnem jeziku"],
-            ["Pametna priporocila", "predlogi pesmi glede na trenutni vibe"],
+            ["Spotify connection", "sync your profile and listening habits"],
+            ["Mood input", "describe how you feel in natural language"],
+            ["Smart recommendations", "get song picks based on your current vibe"],
           ].map(([title, copy]) => (
             <div
               key={title}

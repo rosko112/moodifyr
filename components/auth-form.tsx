@@ -68,7 +68,7 @@ export function AuthForm({ mode, isDatabaseConfigured, initialError }: AuthFormP
       if (!response.ok) {
         setError(
           result.error ??
-            "Streznik je vrnil napako pri prijavi oziroma registraciji.",
+            "The server returned an error while processing authentication.",
         );
         return;
       }
@@ -76,7 +76,7 @@ export function AuthForm({ mode, isDatabaseConfigured, initialError }: AuthFormP
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Povezava s streznikom ni uspela.");
+      setError("Could not reach the server.");
     } finally {
       const elapsed = Date.now() - startedAt;
       if (elapsed < 350) {
@@ -87,23 +87,23 @@ export function AuthForm({ mode, isDatabaseConfigured, initialError }: AuthFormP
   }
 
   return (
-    <div className="w-full max-w-md rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
+    <div className="w-full max-w-md rounded-[2rem] border border-white/10 bg-white/6 p-8 text-white shadow-[0_30px_80px_rgba(3,23,13,0.32)] backdrop-blur">
       <div className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-300">
           modifyr
         </p>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
-          {mode === "register" ? "Ustvari racun" : "Prijava"}
+        <h1 className="mt-3 text-3xl font-black tracking-tight text-white">
+          {mode === "register" ? "Create account" : "Login"}
         </h1>
-        <p className="mt-3 text-sm leading-6 text-slate-600">
+        <p className="mt-3 text-sm leading-6 text-white/65">
           {mode === "register"
-            ? "Ustvari racun za dostop do povezave s Spotifyjem in priporocil glede na razpolozenje."
-            : "Prijavi se in odkleni funkcionalnosti, ki so na voljo prijavljenim uporabnikom."}
+            ? "Create your account to unlock Spotify connection and mood-based recommendations."
+            : "Sign in to continue into your mood-powered workspace."}
         </p>
         {!isDatabaseConfigured ? (
-          <p className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Najprej nastavi <code>DATABASE_URL</code> v <code>.env.local</code>{" "}
-            ali <code>.env</code>.
+          <p className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/12 px-4 py-3 text-sm text-amber-100">
+            Set <code>DATABASE_URL</code> in <code>.env.local</code> or{" "}
+            <code>.env</code> first.
           </p>
         ) : null}
       </div>
@@ -115,7 +115,7 @@ export function AuthForm({ mode, isDatabaseConfigured, initialError }: AuthFormP
         className="grid gap-4"
       >
         {mode === "register" ? (
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-white/80">
             Username
             <input
               name="username"
@@ -125,36 +125,40 @@ export function AuthForm({ mode, isDatabaseConfigured, initialError }: AuthFormP
               pattern="[a-zA-Z0-9_]+"
               required
               placeholder="your_name"
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-emerald-500 focus:bg-white"
+              className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none transition placeholder:text-white/35 focus:border-emerald-400 focus:bg-black/30"
             />
           </label>
         ) : null}
 
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
-          {mode === "register" ? "E-posta" : "Email or username"}
+        <label className="grid gap-2 text-sm font-medium text-white/80">
+          {mode === "register" ? "Email" : "Email or username"}
           <input
             name={mode === "register" ? "email" : "identifier"}
             type={mode === "register" ? "email" : "text"}
             required
-            placeholder={mode === "register" ? "name@example.com" : "name@example.com or your_name"}
-            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-emerald-500 focus:bg-white"
+            placeholder={
+              mode === "register"
+                ? "name@example.com"
+                : "name@example.com or your_name"
+            }
+            className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none transition placeholder:text-white/35 focus:border-emerald-400 focus:bg-black/30"
           />
         </label>
 
-        <label className="grid gap-2 text-sm font-medium text-slate-700">
-          Geslo
+        <label className="grid gap-2 text-sm font-medium text-white/80">
+          Password
           <input
             name="password"
             type="password"
             minLength={6}
             required
-            placeholder="Vsaj 6 znakov"
-            className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-950 outline-none transition focus:border-emerald-500 focus:bg-white"
+            placeholder="At least 6 characters"
+            className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none transition placeholder:text-white/35 focus:border-emerald-400 focus:bg-black/30"
           />
         </label>
 
         {error ? (
-          <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <p className="rounded-2xl border border-rose-300/20 bg-rose-300/12 px-4 py-3 text-sm text-rose-100">
             {error}
           </p>
         ) : null}
@@ -162,13 +166,13 @@ export function AuthForm({ mode, isDatabaseConfigured, initialError }: AuthFormP
         <button
           type="submit"
           disabled={isSubmitting}
-          className="mt-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-2 rounded-full border-2 border-emerald-200/40 bg-[#1ed760] px-5 py-3 text-sm font-black tracking-wide text-[#03220f] shadow-[0_12px_30px_rgba(30,215,96,0.35)] transition hover:bg-[#25e56b] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting
-            ? "Pocakaj trenutek ..."
+            ? "Please wait..."
             : mode === "register"
-              ? "Registriraj se"
-              : "Prijavi se"}
+              ? "Register"
+              : "Login"}
         </button>
 
         {isSubmitting ? (
@@ -180,13 +184,15 @@ export function AuthForm({ mode, isDatabaseConfigured, initialError }: AuthFormP
         ) : null}
       </form>
 
-      <div className="mt-6 text-sm text-slate-600">
-        {mode === "register" ? "Ze imas racun?" : "Se nimas racuna?"}{" "}
+      <div className="mt-6 text-sm text-white/65">
+        {mode === "register"
+          ? "Already have an account?"
+          : "Do not have an account yet?"}{" "}
         <Link
           href={mode === "register" ? "/login" : "/register"}
-          className="font-semibold text-emerald-700 hover:text-emerald-800"
+          className="font-semibold text-emerald-300 hover:text-emerald-200"
         >
-          {mode === "register" ? "Prijava" : "Registracija"}
+          {mode === "register" ? "Login" : "Register"}
         </Link>
       </div>
     </div>

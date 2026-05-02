@@ -1,16 +1,21 @@
 import Link from "next/link";
+import { getDashboardOverview } from "@/lib/dashboard-data";
+import { requireSessionUser } from "@/lib/auth";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const user = await requireSessionUser();
+  const stats = await getDashboardOverview(user.id);
+
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <article className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
         <h2 className="text-xl font-semibold">Today at a glance</h2>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           {[
-            ["Moods logged", "7"],
-            ["Liked songs", "124"],
-            ["Avg session", "26 min"],
-            ["Playlists made", "4"],
+            ["Moods logged", String(stats.moodsLogged)],
+            ["Liked songs", String(stats.likedSongs)],
+            ["Tracks per mood", stats.moodsLogged > 0 ? String((stats.likedSongs / stats.moodsLogged).toFixed(1)) : "0"],
+            ["Last mood", stats.lastMood ?? "none"],
           ].map(([label, value]) => (
             <div
               key={label}

@@ -1,0 +1,108 @@
+⨯ Error [NeonDbError]: Error connecting to database: TypeError: fetch failed
+    at bt.execute (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:14:10445)
+    at async h (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:21:32031)
+    at async i (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:48:42)
+    at async k (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:54:166)
+    at async g (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\[root-of-the-server]__0aw~5.h._.js:1:3914) {
+  severity: undefined,
+  code: undefined,
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined,
+  sourceError: TypeError: fetch failed
+      at async bt.execute (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:14:10356)
+      at async h (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:21:32031)
+      at async i (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:48:42)
+      at async k (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:54:166)
+      at async g (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\[root-of-the-server]__0aw~5.h._.js:1:3914) {
+    [cause]: AggregateError: 
+        at ignore-listed frames {
+      code: 'EACCES',
+      [errors]: [Array]
+    }
+  },
+  digest: '592651175'
+}
+⨯ Error [NeonDbError]: Error connecting to database: TypeError: fetch failed
+    at bt.execute (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:14:10445)
+    at async h (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:21:32031)
+    at async i (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:48:42)
+    at async j (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:54:100)
+    at async g (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\[root-of-the-server]__04l4o2h._.js:8:1625) {
+  severity: undefined,
+  code: undefined,
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined,
+  sourceError: TypeError: fetch failed
+      at async bt.execute (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:14:10356)
+      at async h (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:21:32031)
+      at async i (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:48:42)
+      at async j (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:54:100)
+      at async g (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\[root-of-the-server]__04l4o2h._.js:8:1625) {
+    [cause]: AggregateError: 
+        at ignore-listed frames {
+      code: 'EACCES',
+      [errors]: [Array]
+    }
+  },
+  digest: '166920578'
+}
+⨯ Error [NeonDbError]: Error connecting to database: TypeError: fetch failed
+    at bt.execute (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:14:10445)
+    at async h (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:21:32031)
+    at async i (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:48:42)
+    at async j (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:54:100)
+    at async f (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\[root-of-the-server]__0zbu8ke._.js:1:473) {
+  severity: undefined,
+  code: undefined,
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined,
+  sourceError: TypeError: fetch failed
+      at async bt.execute (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:14:10356)
+      at async h (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:21:32031)
+      at async i (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:48:42)
+      at async j (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\_0aa0fk4._.js:54:100)
+      at async f (F:\Sola\SCV_ERS_2025-2026\Zeleznik\moodifyr\.next\server\chunks\ssr\[root-of-the-server]__0zbu8ke._.js:1:473) {
+    [cause]: AggregateError: 
+        at ignore-listed frames {
+      code: 'EACCES',
+      [errors]: [Array]
+    }
+  },
+  digest: '1913938296'
+}
